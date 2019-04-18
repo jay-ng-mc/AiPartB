@@ -28,6 +28,7 @@ class MinecraftPlayer:
         self.goal = _GOALS[color[0]]
         self.my_pieces = Board.get_start(color)
         self.explored_states = {}   # set of explored states in form of tuple holding pieces
+        self.algorithm = Algorithm()
 
     def action(self):
         """

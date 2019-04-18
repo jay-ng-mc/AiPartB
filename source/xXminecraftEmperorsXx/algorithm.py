@@ -11,8 +11,14 @@ from xXminecraftEmperorsXx import Formatting
 class Algorithm:
     fringe_nodes = queue.PriorityQueue()        # nodes that are adjacent to explored nodes, ordered by f(n)
 
-    def init(self, board, my_pieces, goal, explored_states):
-        pass
+    def __init__(self):
+        file = open(".\\source\\xXminecraftEmperorsXx\\weights.txt", "r")
+        self.weights = Formatting.string_to_tuple(file.read())
+        self.board = {}
+        self.my_pieces = ()
+        self.goal = ()
+        self.explored_states = {}
+        self.fringe_nodes.empty()
 
     def get_next_move(self, board, my_pieces, goal, explored_states):
         self.board = board
@@ -20,11 +26,12 @@ class Algorithm:
         self.goal = goal
         self.explored_states = explored_states
 
-    def heuristic(self, board, my_pieces, goal):
+    def eval(self, board, my_pieces, goal):
         pass
 
     def node_expander(self):
         pass
 
-    def path_finder(self):
+    # iterative depth first search
+    def idfs(self):
         pass
