@@ -1,3 +1,5 @@
+*.pdf
+*.tar.gz
 
 .idea/AiPartB.iml
 .idea/encodings.xml
