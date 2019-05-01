@@ -4,6 +4,7 @@ import math
 import operator
 import time
 import itertools
+import numpy
 
 from xXminecraftEmperorsXx import Formatting
 
