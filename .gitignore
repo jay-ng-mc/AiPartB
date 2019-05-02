@@ -1,4 +1,5 @@
 *.pdf
+*.tar
 *.tar.gz
 
 .idea/AiPartB.iml
