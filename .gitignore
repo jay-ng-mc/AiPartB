@@ -10,3 +10,4 @@
 .idea/workspace.xml
 /venv/
 /source/xXminecraftEmperorsXx/__pycache__
+source/xXminecraftEmperorsXx/test_minecraftPlayer.py
