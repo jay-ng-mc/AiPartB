@@ -55,10 +55,15 @@ class Board:
     def get(self):
         return self.board_dict
 
+    def radius(self):
+        return self.RADIUS
+
     @staticmethod
-    def get_goal(self, color):
+    def get_goal(color):
         return _GOAL_HEXES[color[0]]
 
     @staticmethod
-    def get_start(self, color):
+    def get_start(color):
         return _STARTING_HEXES[color[0]]
+
+
