@@ -120,6 +120,7 @@ class MinecraftPlayer:
         return path
 
     def node_expander(self, board, fringe_nodes, min_f):
+        algorithm = Algorithm()
         # returns the cheapest fringe state that matches goal
         # returns False if no goal-matching state is found
         # "cheats" by using (if h(n)==0) to determine if next_state matches goal, saves having to expand the next_state
@@ -182,7 +183,7 @@ class MinecraftPlayer:
                 next_state = state[:index] + state[index+1:]
 
             if next_state not in self.explored_states:
-                h = Algorithm.eval(board=board, my_pieces=next_state, goal=self.goal)
+                h = algorithm.evaltemp(board=board, player_color = self.color, my_pieces=next_state, goal=self.goal)
 
                 if h == 0:
                     self.explored_states[next_state] = state
