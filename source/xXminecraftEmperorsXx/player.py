@@ -32,8 +32,8 @@ class MinecraftPlayer:
 
         self.board = Board()
         self.color = color
-        # self.goal = _GOALS[color[0]]  # axis, value version of goal
-        self.goal = self.board.get_goal(color)
+        self.goal = _GOALS[color[0]]  # axis, value version of goal
+        self.goal_hexes = self.board.get_goal(color)
         self.my_pieces = tuple(Board.get_start(self.color))
         self.explored_states = {}   # set of explored states in form of tuple holding pieces
 
@@ -149,7 +149,7 @@ class MinecraftPlayer:
             possible_moves.clear()
 
             # add option to leave board
-            if piece in self.goal:
+            if piece in self.goal_hexes:
                 valid_moves.append((piece, None))
                 continue
 

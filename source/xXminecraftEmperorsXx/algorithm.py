@@ -43,8 +43,8 @@ class Algorithm:
         f2 = self.piece_separation(my_pieces)
         # f3 = self.dist_intercept(my_pieces)
         f4 = self.dist_to_goal(my_pieces)
-        f5 = self.can_take(board, my_pieces)
-        f6 = self.can_jump(board, my_pieces)
+        f5 = self.jumps(board, my_pieces, player_color, enemy_only=False)
+        f6 = self.jumps(board, my_pieces, player_color, enemy_only=True)
 
         f7 = self.dist_from_enemy(board, my_pieces)
         f8 = self.second_dist_from_enemy(board, my_pieces)
@@ -74,6 +74,35 @@ class Algorithm:
         # e.g. pair of pieces: (1,2,-3), (-2,0,2); goal: q=3 (q being first axis); intercept: (3,0,-3)
         # my_pieces: tuple
         pass
+
+    @staticmethod
+    def dist_to_goal(my_pieces, goal):
+        # Returns the total integer distance of pieces from their goal
+        # my_pieces: tuple
+        # goal: tuple
+        # goal[0] is goal axis (0,1,2) = (p,q,r); goal[1] is goal value - either +3 or -3
+        total_distance = 0
+        for piece in my_pieces:
+            total_distance += abs(piece[goal[0]] - goal[1])
+        return total_distance
+
+    @staticmethod
+    def jumps(board, my_pieces, player_color, enemy_only):
+        # Returns the number of pieces that my pieces can jump over
+        #      if enemy_only == true: only counts enemy pieces that my pieces can jump over
+        # board: Dictionary
+        # my_pieces: Tuple
+        unit_move = [(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)]
+        jumps, conquests = 0, 0
+        for piece in my_pieces:
+            adjacent_hexes = list(map(operator.add, piece, unit_move))
+            for hex in adjacent_hexes:
+                if board[hex] != "":
+                    jumps += 1
+                    if board[hex] != player_color:
+                        conquests += 1
+        if enemy_only: return conquests
+        else: return jumps
 
     # iterative depth first search
     def idfs(self):
