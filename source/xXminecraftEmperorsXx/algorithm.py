@@ -8,6 +8,7 @@ import numpy as np
 from xXminecraftEmperorsXx import Formatting
 
 _FILE_PATH = ".\\source\\xXminecraftEmperorsXx\\weights.txt"
+unit_moves = np.array([(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)])
 
 
 class Algorithm:
@@ -48,8 +49,8 @@ class Algorithm:
 
         f7 = self.dist_from_enemy(board, my_pieces)
         f8 = self.second_dist_from_enemy(board, my_pieces)
-        f9 = self.dist_btw_enemy(board)
-        f10 = self.dist_btw_enemy(board)
+        # f9 = self.dist_btw_enemy(board)
+        # f10 = self.dist_btw_enemy(board)
 
         features_vector = np.array(features)
         return features_vector
@@ -92,17 +93,53 @@ class Algorithm:
         #      if enemy_only == true: only counts enemy pieces that my pieces can jump over
         # board: Dictionary
         # my_pieces: Tuple
-        unit_move = [(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)]
         jumps, conquests = 0, 0
         for piece in my_pieces:
-            adjacent_hexes = list(map(operator.add, piece, unit_move))
+            adjacent_hexes = [tuple(map(operator.add, piece, unit_move)) for unit_move in unit_moves]
             for hex in adjacent_hexes:
-                if board[hex] != "":
+                if hex in board and board[hex] != "":
                     jumps += 1
                     if board[hex] != player_color:
                         conquests += 1
         if enemy_only: return conquests
         else: return jumps
+
+    @staticmethod
+    def dist_from_enemy(board, my_pieces, num_enemies=1):
+        # Returns minimum
+        assert(num_enemies>=1)
+        distances = []
+        checked_enemies = []
+        rad = 3     # how do we generalize this to board radius? board passed in is pure dict, not board structure
+        for i in range(1, 2*rad):
+            for piece in my_pieces:
+                check_hexes = [tuple(map(operator.add, piece, unit_move*i)) for unit_move in unit_moves]
+                print(check_hexes, "DEBUG")
+                for hex in check_hexes:
+                    if hex in my_pieces:
+                        # avoid treating own pieces as enemy
+                        continue
+
+                    q,r = hex
+                    if abs(q)>rad or abs(r)>rad or abs(-q-r)>rad:
+                        # don't bother checking hexes not in the board
+                        continue
+                    if board[hex] != "" :
+                        if hex in checked_enemies:
+                            # go to next hex if this hex has already been checked (avoid repeat counting enemies)
+                            continue
+
+                        checked_enemies.append(hex)
+                        if num_enemies==1:
+                            return i
+                        elif len(distances) >= num_enemies:
+                            return distances
+                        else:
+                            distances.append(i)
+
+    def second_dist_from_enemy(self, board, my_pieces):
+        distances = self.dist_from_enemy(board, my_pieces, num_enemies=2)
+        return distances[1]
 
     # iterative depth first search
     def idfs(self):
