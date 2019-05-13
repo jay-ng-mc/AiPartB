@@ -114,17 +114,16 @@ class Algorithm:
         for i in range(1, 2*rad):
             for piece in my_pieces:
                 check_hexes = [tuple(map(operator.add, piece, unit_move*i)) for unit_move in unit_moves]
-                print(check_hexes, "DEBUG")
                 for hex in check_hexes:
                     if hex in my_pieces:
                         # avoid treating own pieces as enemy
                         continue
-
-                    q,r = hex
+                    (q, r) = hex
                     if abs(q)>rad or abs(r)>rad or abs(-q-r)>rad:
                         # don't bother checking hexes not in the board
                         continue
-                    if board[hex] != "" :
+
+                    if hex in board and board[hex] != "" :
                         if hex in checked_enemies:
                             # go to next hex if this hex has already been checked (avoid repeat counting enemies)
                             continue
@@ -132,10 +131,10 @@ class Algorithm:
                         checked_enemies.append(hex)
                         if num_enemies==1:
                             return i
-                        elif len(distances) >= num_enemies:
-                            return distances
                         else:
                             distances.append(i)
+                            if len(distances) >= num_enemies:
+                                return distances
 
     def second_dist_from_enemy(self, board, my_pieces):
         distances = self.dist_from_enemy(board, my_pieces, num_enemies=2)
