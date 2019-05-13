@@ -29,8 +29,9 @@ class Algorithm:
     def eval(self, board, player_color, my_pieces, goal):
         # Returns a float value in range (0,1) to indicate the goodness of the current board state for the player
         # board : Dictionary
-        # my_pieces : tuple
-        # goal : tuple
+        # my_pieces : Tuple, e.g.(piece1, piece2, piece3)
+        #   piece in my_pieces : Tuple, e.g. (0,1), (1,2), (3,-1)
+        # goal : Tuple, in format of (axis_number, axis_value), e.g. (0,3)
         pass
 
     def features(self, board, player_color, my_pieces, goal):
@@ -106,7 +107,12 @@ class Algorithm:
 
     @staticmethod
     def dist_from_enemy(board, my_pieces, num_enemies=1):
-        # Returns minimum
+        # Returns minimum distance between a self piece and an enemy piece
+        # Returns array of smallest distances from any self piece to enemy pieces (enemy pieces are counted only once)
+        #   i.e. if two player pieces are next to two enemy pieces, the two player pieces will count 2 enemies and not 4
+        # board : Dictionary
+        # my_pieces : Tuple
+        # num_enemies : integer
         assert(num_enemies>=1)
         distances = []
         checked_enemies = []
@@ -139,7 +145,3 @@ class Algorithm:
     def second_dist_from_enemy(self, board, my_pieces):
         distances = self.dist_from_enemy(board, my_pieces, num_enemies=2)
         return distances[1]
-
-    # iterative depth first search
-    def idfs(self):
-        pass
