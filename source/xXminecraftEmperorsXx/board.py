@@ -1,3 +1,5 @@
+import random
+
 _STARTING_HEXES = {
     'r': {(-3,3), (-3,2), (-3,1), (-3,0)},
     'g': {(0,-3), (1,-3), (2,-3), (3,-3)},
@@ -65,5 +67,40 @@ class Board:
     @staticmethod
     def get_start(color):
         return _STARTING_HEXES[color[0]]
+    
+    @staticmethod
+    def get_random_board():
+
+        num_pieces_on_board = {
+            """ the key is a character corresponding to each colour, the tuple is current 
+                number on board, and max number on board respectively
+            """
+            "r":0,
+            "g":0,
+            "b":0
+        }
+
+        random_board = {}
+        coord_range = range(-Board.RADIUS, Board.RADIUS+1)
+        coord_list = [(q, r) for q in coord_range for r in coord_range if -q-r in coord_range]
+        for coord in coord_list:
+            random_board[coord] = ""
+
+        # generate max number of pieces for each colour
+        for key in num_pieces_on_board:
+            num_pieces_on_board[key] = random.randint(0, 4 + 1)
+
+        # for each colour, choose a random position on the board. 
+        for col in "rgb":
+            for _ in range(num_pieces_on_board[col]):
+                random_board[random.choice(coord_list)] = col
+
+            # TODO make sure that it's not already taken tho 
+        
+        # once all pieces are settled, return the board
+        return random_board
+
+        
+
 
 
