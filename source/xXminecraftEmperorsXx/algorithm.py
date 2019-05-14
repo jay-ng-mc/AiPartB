@@ -3,6 +3,7 @@ import math
 import operator
 import time
 import itertools
+import math
 import numpy as np
 
 from xXminecraftEmperorsXx import Formatting
@@ -23,7 +24,7 @@ class Algorithm:
     def evaltemp(self, board, player_color, my_pieces, goal):
         distance = 0
         for piece in my_pieces:
-            distance += (tuple(goal)[0][0] - piece[0])
+            distance += (tuple(goal)[1] - piece[0])
         return distance
 
     def eval(self, board, player_color, my_pieces, goal):
@@ -32,7 +33,12 @@ class Algorithm:
         # my_pieces : Tuple, e.g.(piece1, piece2, piece3)
         #   piece in my_pieces : Tuple, e.g. (0,1), (1,2), (3,-1)
         # goal : Tuple, in format of (axis_number, axis_value), e.g. (0,3)
-        pass
+        features = self.features(board, player_color, my_pieces, goal)
+        assert(len(features) == len(self.weights))      # make sure same size so we can calculate dot product
+        evaluation = features.dot(self.weights)
+        # evaluate current utility considering all features and their importances
+        reward = math.tanh(evaluation)                  # normalize evaluation
+        return reward
 
     def features(self, board, player_color, my_pieces, goal):
         # Returns a numpy vector that contains the features of the current board state
