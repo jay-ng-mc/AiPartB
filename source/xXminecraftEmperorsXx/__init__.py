@@ -1,1 +1,1 @@
-from xXminecraftEmperorsXx.player import ExamplePlayer as Player
+from xXminecraftEmperorsXx.player import MinecraftPlayer as Player
