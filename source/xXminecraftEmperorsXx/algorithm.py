@@ -33,11 +33,17 @@ class Algorithm:
         # my_pieces : Tuple, e.g.(piece1, piece2, piece3)
         #   piece in my_pieces : Tuple, e.g. (0,1), (1,2), (3,-1)
         # goal : Tuple, in format of (axis_number, axis_value), e.g. (0,3)
-        features = self.features(board, player_color, my_pieces, goal)
-        assert(len(features) == len(self.weights))      # make sure same size so we can calculate dot product
+        features = self.features(board, player_color[0], my_pieces, goal)
+        assert(features.size == len(self.weights))      # make sure same size so we can calculate dot product
         evaluation = features.dot(self.weights)
+
+        print("DEBUG evals = ", evaluation)
+
         # evaluate current utility considering all features and their importances
         reward = math.tanh(evaluation)                  # normalize evaluation
+
+        print("DEBUG rewawrds = ", reward)
+
         return reward
 
     def features(self, board, player_color, my_pieces, goal):
@@ -45,12 +51,13 @@ class Algorithm:
         # board : Dictionary
         # my_pieces : tuple
         # goal : tuple
-        features = []
+
+        pieces_3axis = Algorithm.piece_3axis(my_pieces)    # add third axis to piece
 
         f1 = len(my_pieces)
-        f2 = self.piece_separation(my_pieces)
-        # f3 = self.dist_intercept(my_pieces)
-        f4 = self.dist_to_goal(my_pieces)
+        f2 = self.piece_separation(pieces_3axis)
+        # f3 = self.dist_intercept(pieces_3axis)
+        f4 = self.dist_to_goal(pieces_3axis, goal)
         f5 = self.jumps(board, my_pieces, player_color, enemy_only=False)
         f6 = self.jumps(board, my_pieces, player_color, enemy_only=True)
 
@@ -59,7 +66,11 @@ class Algorithm:
         # f9 = self.dist_btw_enemy(board)
         # f10 = self.dist_btw_enemy(board)
 
+        features = [f1, f2, f4, f5, f6, f7, f8]
         features_vector = np.array(features)
+
+        print("DEBUG features = ", features_vector)
+
         return features_vector
 
     @staticmethod
@@ -93,6 +104,16 @@ class Algorithm:
         for piece in my_pieces:
             total_distance += abs(piece[goal[0]] - goal[1])
         return total_distance
+
+    @staticmethod
+    def piece_3axis(pieces):
+        pieces_3axis = []
+        for piece in pieces:
+            (q, r) = piece
+            s = -q - r
+            piece = (q, r, s)
+            pieces_3axis.append(piece)
+        return tuple(pieces_3axis)
 
     @staticmethod
     def jumps(board, my_pieces, player_color, enemy_only):
