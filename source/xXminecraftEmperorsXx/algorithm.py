@@ -7,7 +7,7 @@ import numpy as np
 
 from xXminecraftEmperorsXx import Formatting
 
-_FILE_PATH = ".\\source\\xXminecraftEmperorsXx\\weights.txt"
+_FILE_PATH = "./xXminecraftEmperorsXx/weights.txt"
 unit_moves = np.array([(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)])
 
 
@@ -23,7 +23,7 @@ class Algorithm:
     def evaltemp(self, board, player_color, my_pieces, goal):
         distance = 0
         for piece in my_pieces:
-            distance += (tuple(goal)[0][0] - piece[0])
+            distance += (tuple(goal)[0] - piece[0])
         return distance
 
     def eval(self, board, player_color, my_pieces, goal):
