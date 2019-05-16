@@ -33,8 +33,8 @@ class Board:
 
         # add colored pieces, code taken from referee\game.py
         for color in "rgb":
-            for qr in _STARTING_HEXES[color]:
-                self.board_dict[qr] = color
+            for coord in _STARTING_HEXES[color]:
+                self.board_dict[coord] = color
 
     def update(self, color, action):
         aType, aArgs = action

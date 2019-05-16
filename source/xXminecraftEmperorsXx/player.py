@@ -89,13 +89,15 @@ class MinecraftPlayer:
 
     # uses A* search
     def path_finder(self, board, my_pieces):
-        fringe_nodes = queue.PriorityQueue()  # nodes that are adjacent to explored nodes, ordered by f(n)
-        fringe_nodes.put((0, 0, my_pieces, "root"))     # add root node to fringe to be expanded, root is current state
+        utilities = (0, 0, 0)           # player utilities
+        fringe_nodes = queue.Queue()    # nodes that are adjacent to explored nodes, ordered by f(n)
+        fringe_nodes.put((utilities, my_pieces, "root"))
+        # add root node to fringe to be expanded, root is current state
 
         node_count = 0  # keep track of node resource
         start_time = time.time()  # keep track of time resource
         goal_reached = False
-        min_f = [None, None]
+        # min_f = [None, None]
 
         while self.time_limit(start_time, limit=5) is True:
             # while node_limit(node_count, limit=50) is True:
@@ -125,17 +127,16 @@ class MinecraftPlayer:
 
         return path
 
-    def node_expander(self, board, fringe_nodes, min_f):
-        algorithm = Algorithm()
+    def node_expander(self, board, fringe_nodes):
         # returns the cheapest fringe state that matches goal
         # returns False if no goal-matching state is found
         # "cheats" by using (if h(n)==0) to determine if next_state matches goal, saves having to expand the next_state
 
         # node is the current state of your pieces on the board, index 1 removes priority value
-        node = fringe_nodes.get()                                           # node contains f, g, state, and prev_state
-        g = node[1]                                                         # g = cost of reaching state
-        state = node[2]                                                     # state = tuple of piece coordinates
-        prev_state = node[3]
+        node = fringe_nodes.get()                                   # node contains utilities, state, and prev_state
+        utilities = node[0]                                         # utility for each player (normalized)
+        state = node[1]                                             # state = tuple of piece coordinates
+        prev_state = node[2]
 
         # if already explored, discard node
         if state in self.explored_states:
@@ -189,27 +190,25 @@ class MinecraftPlayer:
                 next_state = state[:index] + state[index+1:]
 
             if next_state not in self.explored_states:
-                h = algorithm.evaltemp(board=board, player_color = self.color, my_pieces=next_state, goal=self.goal)
-
-                if h == 0:
-                    self.explored_states[next_state] = state
-                    # goal has been found
-                    return (g + 1, next_state)
-
-                # f is estimated total path cost, h is predicted cost of remaining path, g is current path cost
-                f = h + g
-
-                fringe_nodes.put((f, g + 1, next_state, state))
-
-                if min_f[0] is None or f <= min_f[0]:
-                    min_f[0] = f
-                    min_f[1] = next_state
-
+                utilities = self.calculate_utilities(board)
+                fringe_nodes.put((utilities, next_state, state))
             else:
                 pass
 
         # goal has not been found
         return False
+
+    def calculate_utilities(self, board):
+        algorithm = Algorithm()
+        red_pieces = tuple([key for key in board.keys() if board[key] == "r"])
+        green_pieces = tuple([key for key in board.keys() if board[key] == "g"])
+        blue_pieces = tuple([key for key in board.keys() if board[key] == "b"])
+        util_red = algorithm.eval(board, "r", red_pieces, _GOALS["r"])
+        util_green = algorithm.eval(board, "g", green_pieces, _GOALS["g"])
+        util_blue = algorithm.eval(board, "b", blue_pieces, _GOALS["b"])
+
+        utilities = (util_red, util_green, util_blue)
+        return utilities
 
     def node_limit(self, current, limit):
         if current <= limit:
@@ -228,6 +227,7 @@ class MinecraftPlayer:
     def main(self):
         self.__init__("red")
         self.action()
+
 
 if __name__ == "__main__":
     player = MinecraftPlayer("red")
