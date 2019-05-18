@@ -65,8 +65,11 @@ class Board:
         return _GOAL_HEXES[color[0]]
 
     @staticmethod
-    def get_start(color):
-        return _STARTING_HEXES[color[0]]
+    def get_start():
+        player_pieces = {}
+        player_pieces.update(_STARTING_HEXES)
+        # this makes a new copy of the dictionary to avoid interfering with _STARTING_HEXES
+        return player_pieces
     
     @staticmethod
     def get_random_board():
