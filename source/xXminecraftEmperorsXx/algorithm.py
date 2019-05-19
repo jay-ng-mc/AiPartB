@@ -39,6 +39,8 @@ class Algorithm:
         assert(features.size == len(self.weights))      # make sure same size so we can calculate dot product
         evaluation = features.dot(self.weights)
 
+        # Coordinates will be in the form ( ("r", (0,0), (0,1), (1,2)), ("g", (0,0), (0,1), (1,2)), ("b", (0,0), (0,1), (1,2)) )
+
         print("DEBUG evals = ", evaluation)
 
         # evaluate current utility considering all features and their importances
