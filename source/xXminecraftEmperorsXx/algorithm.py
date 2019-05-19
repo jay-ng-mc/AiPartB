@@ -11,6 +11,10 @@ from xXminecraftEmperorsXx import Formatting
 _FILE_PATH = ".\\source\\xXminecraftEmperorsXx\\weights.txt"
 unit_moves = np.array([(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)])
 
+# TD Leaf
+LEARNING_RATE = 0.1
+LAMBDA = 1
+
 
 class Algorithm:
 
@@ -18,15 +22,6 @@ class Algorithm:
         file = open(_FILE_PATH, "r")
         self.weights = Formatting.string_to_tuple(file.read())
         file.close()
-
-    def weight_update(self, test):
-        pass
-
-    def evaltemp(self, board, player_color, my_pieces, goal):
-        distance = 0
-        for piece in my_pieces:
-            distance += (tuple(goal)[1] - piece[0])
-        return distance
 
     def eval(self, board, player_color, my_pieces, goal):
         # Returns a float value in range (0,1) to indicate the goodness of the current board state for the player

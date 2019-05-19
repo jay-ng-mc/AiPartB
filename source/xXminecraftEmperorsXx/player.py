@@ -60,7 +60,7 @@ class MinecraftPlayer:
         """
         # TODO: Decide what action to take.
 
-        next_move = self.max_n()
+        next_move = self.max_n()[0]
 
         # modify to match output format
         print(next_move)
@@ -88,6 +88,11 @@ class MinecraftPlayer:
 
         self.board.update(color, action)
 
+    def train(self):
+        (next_move, utility) = self.max_n()
+        print(next_move, utility)
+        pass
+
     def max_n(self):
         # real_board = self.board.get()
         projected_board = self.board.copy()           # projected board to play around with
@@ -106,7 +111,7 @@ class MinecraftPlayer:
         index = utilities.index(max_utility)
         move = moves[index]
 
-        return move
+        return (move, max_utility)
 
     def back_utility(self, current):
         assert(current is not None)
