@@ -24,7 +24,7 @@ class Board:
         "b":4
     }
 
-    def init(self):
+    def __init__(self):
         # initialize blank board
         self.board_dict = {}
         coord_range = range(-Board.RADIUS, Board.RADIUS+1)
@@ -57,6 +57,11 @@ class Board:
     def get(self):
         return self.board_dict
 
+    def copy(self):
+        projected_board = {}
+        projected_board.update(self.board_dict)
+        return projected_board
+
     def radius(self):
         return self.RADIUS
 
@@ -65,8 +70,11 @@ class Board:
         return _GOAL_HEXES[color[0]]
 
     @staticmethod
-    def get_start(color):
-        return _STARTING_HEXES[color[0]]
+    def get_start():
+        player_pieces = {}
+        player_pieces.update(_STARTING_HEXES)
+        # this makes a new copy of the dictionary to avoid interfering with _STARTING_HEXES
+        return player_pieces
     
     @staticmethod
     def get_random_board():

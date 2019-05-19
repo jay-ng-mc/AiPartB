@@ -17,6 +17,7 @@ class Algorithm:
     def __init__(self):
         file = open(_FILE_PATH, "r")
         self.weights = Formatting.string_to_tuple(file.read())
+        file.close()
 
     def weight_update(self, test):
         pass
