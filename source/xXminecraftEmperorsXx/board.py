@@ -24,7 +24,7 @@ class Board:
         "b":4
     }
 
-    def init(self):
+    def __init__(self):
         # initialize blank board
         self.board_dict = {}
         coord_range = range(-Board.RADIUS, Board.RADIUS+1)
@@ -56,6 +56,11 @@ class Board:
 
     def get(self):
         return self.board_dict
+
+    def copy(self):
+        projected_board = {}
+        projected_board.update(self.board_dict)
+        return projected_board
 
     def radius(self):
         return self.RADIUS
