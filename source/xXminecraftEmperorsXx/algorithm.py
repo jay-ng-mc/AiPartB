@@ -8,7 +8,7 @@ import numpy as np
 
 from xXminecraftEmperorsXx import Formatting
 
-_FILE_PATH = ".\\source\\xXminecraftEmperorsXx\\weights.txt"
+_FILE_PATH = ".\\xXminecraftEmperorsXx\\weights.txt"
 unit_moves = np.array([(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)])
 
 # TD Leaf
@@ -33,12 +33,12 @@ class Algorithm:
         assert(features.size == len(self.weights))      # make sure same size so we can calculate dot product
         evaluation = features.dot(self.weights)
 
-        print("DEBUG evals = ", evaluation)
 
         # evaluate current utility considering all features and their importances
         reward = math.tanh(evaluation)                  # normalize evaluation
 
-        print("DEBUG rewawrds = ", reward)
+        # print("DEBUG evals = ", evaluation)
+        # print("DEBUG rewawrds = ", reward)
 
         return reward
 
@@ -65,7 +65,7 @@ class Algorithm:
         features = [f1, f2, f4, f5, f6, f7, f8]
         features_vector = np.array(features)
 
-        print("DEBUG features = ", features_vector)
+        # print("DEBUG features = ", features_vector)
 
         return features_vector
 
@@ -140,7 +140,7 @@ class Algorithm:
         distances = []
         checked_enemies = []
         rad = 3     # how do we generalize this to board radius? board passed in is pure dict, not board structure
-        for i in range(1, 2*rad):
+        for i in range(1, 4):   # we don't really care about pieces further than 4 units away
             for piece in my_pieces:
                 check_hexes = [tuple(map(operator.add, piece, unit_move*i)) for unit_move in unit_moves]
                 for hex in check_hexes:
@@ -165,6 +165,15 @@ class Algorithm:
                             if len(distances) >= num_enemies:
                                 return distances
 
+        # no enemies in sight, return large distance (super unclean code)
+        return 5
+
     def second_dist_from_enemy(self, board, my_pieces):
         distances = self.dist_from_enemy(board, my_pieces, num_enemies=2)
+
+        # when not enough enemies in sight, return large distance (unclean)
+        if type(distances) == type(5):
+            distances = [5]
+        while len(distances) < 2:
+            distances.append(5)
         return distances[1]

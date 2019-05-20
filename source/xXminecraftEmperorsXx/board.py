@@ -17,14 +17,13 @@ _GOAL_HEXES = {
 class Board:
     RADIUS = 3
 
-    board_dict = {}
-    num_pieces = {
-        "r":4,
-        "g":4,
-        "b":4
-    }
-
     def __init__(self):
+        self.num_pieces = {
+            "r":4,
+            "g":4,
+            "b":4
+        }
+
         # initialize blank board
         self.board_dict = {}
         coord_range = range(-Board.RADIUS, Board.RADIUS+1)
@@ -42,13 +41,16 @@ class Board:
         if aType == "MOVE":
             qr1, qr2 = aArgs
             self.board_dict[qr1] = ""
-            self.board_dict[qr2] = color
+            self.board_dict[qr2] = color[0]
         elif aType == "JUMP":
             (q1, r1), (q2, r2) = qr1, qr2 = aArgs
-            jump_pad = q1+q2//2, r1+r2//2
+            jump_pad = (q1+q2)//2, (r1+r2)//2
             self.board_dict[qr1] = ""
-            self.board_dict[qr2] = color
-            self.board_dict[jump_pad] = color
+            self.board_dict[qr2] = color[0]
+            victim_color = self.board_dict[jump_pad]
+            self.board_dict[jump_pad] = color[0]
+            self.num_pieces[color[0]] += 1
+            self.num_pieces[victim_color[0]] -= 1
         elif aType == "EXIT":
             qr1 = aArgs
             self.board_dict[qr1] = ""

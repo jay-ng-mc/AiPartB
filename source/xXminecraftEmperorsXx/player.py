@@ -62,6 +62,8 @@ class MinecraftPlayer:
 
         next_move = self.max_n()[0]
 
+        pieces = self.board.num_pieces
+
         # modify to match output format
         print(next_move)
         return next_move
@@ -91,6 +93,7 @@ class MinecraftPlayer:
     def train(self):
         (next_move, utility) = self.max_n()
         print(next_move, utility)
+        return next_move
         pass
 
     def max_n(self):
@@ -103,18 +106,20 @@ class MinecraftPlayer:
         children = current.children
         moves, utilities = [], []
         for child in children:
-            snap = child.snapshot
+            move = child.parent_move
             utility = self.back_utility(child)
-            moves.append(snap)
+            moves.append(move)
             utilities.append(utility)
         max_utility = max(utilities)
         index = utilities.index(max_utility)
-        move = moves[index]
+        best_move = moves[index]
 
-        return (move, max_utility)
+        return (best_move, max_utility)
 
     def back_utility(self, current):
         assert(current is not None)
+        if len(current.children) <= 0:
+            print("DEUBUG broken")
         assert(len(current.children) > 0)
         color = current.turn
         util_pos = _TURN_ID[color]
@@ -131,7 +136,7 @@ class MinecraftPlayer:
     def build_tree(self, root_board):
         DEPTH_LIMIT = 2
         snapshot = self.snapshot(root_board)
-        root = Tree(snapshot=snapshot, level=0, parent=None, turn=self.color[0])
+        root = Tree(snapshot=snapshot, level=0, parent=None, parent_move=None, turn=self.color[0])
         fringe_nodes = queue.Queue()
         fringe_nodes.put(root)
 
@@ -140,6 +145,8 @@ class MinecraftPlayer:
             level = node.level
             if level < DEPTH_LIMIT:
                 children = self.node_expander(node)
+                if len(children) == 0:
+                    print("DEBUG CHECK")
                 node.add_children(children)
                 for child in children:
                     fringe_nodes.put(child)
@@ -193,15 +200,31 @@ class MinecraftPlayer:
             if len(valid_moves) == 0:
                 valid_moves.append(("PASS", None, None, None))
 
-            for move in valid_moves:
-                next_board = self.next_board(board, move)
-                snapshot = self.snapshot(next_board)
-                child = Tree(snapshot, level=node.level+1, parent=node, turn=_NEXT_TURN[node.turn])
-                children.append(child)
+        for move in valid_moves:
+            next_board = self.next_board(board, move)
+            snapshot = self.snapshot(next_board)
+            output_move = self.convert_output(move)
+            child = Tree(snapshot,
+                         level=node.level+1,
+                         parent=node,
+                         parent_move=output_move,
+                         turn=_NEXT_TURN[node.turn])
+            children.append(child)
 
-        print("DEBUG children=", children)
-
+        if len(children) == 0:
+            print("DEBUG check")
         return children
+
+    def convert_output(self, move):
+        action, old_pos, new_pos = move[0], move[1], move[2]
+        if action in ["MOVE", "JUMP"]:
+            output_move = (action, (old_pos, new_pos))
+        elif action == "EXIT":
+            output_move = (action, old_pos)
+        else:
+            # pass
+            output_move = (action, None)
+        return output_move
 
     def next_board(self, board, move):
         action_type, piece, new_pos, jump_target = move[0], move[1], move[2], move[3]
@@ -383,10 +406,11 @@ class MinecraftPlayer:
 
 class Tree:
     # Generic tree node
-    def __init__(self, snapshot, level, parent, turn, utility=None, children=None):
+    def __init__(self, snapshot, level, parent, parent_move, turn, utility=None, children=None):
         self.snapshot = snapshot
         self.level = level
         self.parent = parent
+        self.parent_move = parent_move      # the move that leads to this child
         self.turn = turn
         self.utility = utility
         self.children = []

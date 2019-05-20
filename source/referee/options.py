@@ -148,6 +148,7 @@ def get_options():
         help="limit on CPU time (float, seconds) for each player")
 
     optionals.add_argument('--train',
+                           nargs='?',
                            default=0, const=1,
                            help="turn on weight update")
 
