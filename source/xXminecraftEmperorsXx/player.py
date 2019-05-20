@@ -22,7 +22,7 @@ _TURN_ID = {
     "b":2
 }
 _LIMIT = 4
-
+# _TRAINING = False
 
 class MinecraftPlayer:
 
@@ -45,7 +45,10 @@ class MinecraftPlayer:
         self.color = color
         self.goal = _GOALS[color[0]]  # axis, value version of goal
         self.goal_hexes = self.board.get_goal(color)
-        self.explored_states = {}   # set of explored states in form of tuple holding pieces
+
+        # used for training only
+        self.rewards = []
+        self.features = []
 
     def action(self):
         """
@@ -62,10 +65,8 @@ class MinecraftPlayer:
 
         next_move = self.max_n()[0]
 
-        pieces = self.board.num_pieces
-
         # modify to match output format
-        print(next_move)
+        # print(next_move)
         return next_move
 
     def update(self, color, action):
@@ -90,17 +91,19 @@ class MinecraftPlayer:
 
         self.board.update(color, action)
 
-    def train(self):
-        (next_move, utility) = self.max_n()
-        print(next_move, utility)
+    def train_step(self):
+        (next_move, util_feature) = self.max_n(training=True)
+        utility, feature = util_feature
+        self.rewards.append(utility)
+        self.features.append(feature)
+        # print(next_move, utility)
         return next_move
-        pass
 
-    def max_n(self):
+    def max_n(self, training=False):
         # real_board = self.board.get()
         projected_board = self.board.copy()           # projected board to play around with
 
-        tree = self.build_tree(projected_board)
+        tree = self.build_tree(projected_board, training=training)
         current = tree
 
         children = current.children
@@ -110,16 +113,20 @@ class MinecraftPlayer:
             utility = self.back_utility(child)
             moves.append(move)
             utilities.append(utility)
-        max_utility = max(utilities)
+
+        max_utility = max(utilities, key=lambda util:utilities[0])
+        # maximum, sorted by first element in utilities (which is the actual utility, not including the features
+
         index = utilities.index(max_utility)
         best_move = moves[index]
 
         return (best_move, max_utility)
 
+    def weight_train(self):
+        pass
+
     def back_utility(self, current):
         assert(current is not None)
-        if len(current.children) <= 0:
-            print("DEUBUG broken")
         assert(len(current.children) > 0)
         color = current.turn
         util_pos = _TURN_ID[color]
@@ -131,9 +138,10 @@ class MinecraftPlayer:
             else:
                 utility = child.utility[util_pos]
             utilities.append(utility)
-        return max(utilities)
+        return max(utilities, key=lambda util:utilities[0])
+        # maximum, sorted by first element in utilities (which is the actual utility, not including the features
 
-    def build_tree(self, root_board):
+    def build_tree(self, root_board, training=False):
         DEPTH_LIMIT = 2
         snapshot = self.snapshot(root_board)
         root = Tree(snapshot=snapshot, level=0, parent=None, parent_move=None, turn=self.color[0])
@@ -145,14 +153,12 @@ class MinecraftPlayer:
             level = node.level
             if level < DEPTH_LIMIT:
                 children = self.node_expander(node)
-                if len(children) == 0:
-                    print("DEBUG CHECK")
                 node.add_children(children)
                 for child in children:
                     fringe_nodes.put(child)
             else:
                 board = self.unsnap(node.snapshot)
-                node.utility = self.calculate_utilities(board, node.snapshot)
+                node.utility = self.calculate_utilities(board, node.snapshot, training=training)
 
         return root
 
@@ -210,9 +216,6 @@ class MinecraftPlayer:
                          parent_move=output_move,
                          turn=_NEXT_TURN[node.turn])
             children.append(child)
-
-        if len(children) == 0:
-            print("DEBUG check")
         return children
 
     def convert_output(self, move):
@@ -240,7 +243,7 @@ class MinecraftPlayer:
 
         return next_board
 
-    def calculate_utilities(self, board, player_pieces):
+    def calculate_utilities(self, board, player_pieces, training=False):
         algorithm = Algorithm()
         # red_pieces = tuple([key for key in board.keys() if board[key] == "r"])
         # green_pieces = tuple([key for key in board.keys() if board[key] == "g"])
@@ -248,9 +251,9 @@ class MinecraftPlayer:
         red_pieces = player_pieces["r"]
         green_pieces = player_pieces["g"]
         blue_pieces = player_pieces["b"]
-        util_red = algorithm.eval(board, "r", red_pieces, _GOALS["r"])
-        util_green = algorithm.eval(board, "g", green_pieces, _GOALS["g"])
-        util_blue = algorithm.eval(board, "b", blue_pieces, _GOALS["b"])
+        util_red = algorithm.eval(board, "r", red_pieces, _GOALS["r"], training=training)
+        util_green = algorithm.eval(board, "g", green_pieces, _GOALS["g"], training=training)
+        util_blue = algorithm.eval(board, "b", blue_pieces, _GOALS["b"], training=training)
 
         utilities = (util_red, util_green, util_blue)
         return utilities
@@ -406,13 +409,14 @@ class MinecraftPlayer:
 
 class Tree:
     # Generic tree node
-    def __init__(self, snapshot, level, parent, parent_move, turn, utility=None, children=None):
+    def __init__(self, snapshot, level, parent, parent_move, turn, utility=None, features=None, children=None):
         self.snapshot = snapshot
         self.level = level
         self.parent = parent
         self.parent_move = parent_move      # the move that leads to this child
         self.turn = turn
         self.utility = utility
+        self.features = features
         self.children = []
         if children is not None:
             for child in children:

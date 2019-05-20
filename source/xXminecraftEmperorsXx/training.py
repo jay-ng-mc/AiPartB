@@ -1,93 +1,88 @@
 import time
 
+from referee.__main__ import play
 from referee.log import StarLog
-from referee.game import Chexers
-from referee.player import ResourceLimitException, set_space_line, PlayerWrapper
-from referee.options import PackageSpecAction
+from referee.game import Chexers, IllegalActionException
+from referee.player import PlayerWrapper
+from referee.options import PackageSpecAction, get_options
 from xXminecraftEmperorsXx.algorithm import Algorithm
 from xXminecraftEmperorsXx.player import MinecraftPlayer as Player
+from xXminecraftEmperorsXx.Formatting import string_to_tuple
+import numpy as np
 
+_FILE_PATH = ".\\xXminecraftEmperorsXx\\weights.txt"
 
 def main():
+    GAME_LIMIT = 1
+    game_num = 0
+
+    while game_num < GAME_LIMIT:
+        file = open(_FILE_PATH, "r")
+        weights_tuple = string_to_tuple(file.read())
+        weights = np.array(weights_tuple)
+        file.close()
+
+        print("# New Game")
+        weights = run_game(weights)
+        file = open(_FILE_PATH, "w")
+        new_weight = np.array2string(weights, separator=',', formatter={'float_kind':lambda x: "%.10f" % x})
+        print('weights=', weights, new_weight)
+        file.write(new_weight)
+        file.close()
+        game_num += 1
+
+def run_game(weights):
+    # Code copied from __main__() in referee.py
+    # Modified to allow for training
     algorithm = Algorithm()
-    options = Options()
+    options = get_options()
 
-    player_loc_string = "\\xXminecraftEmperorsXx\\player.py"
-    player_loc = PackageSpecAction.__call__(player_loc_string)
-    out = StarLog(level=options.verbosity, star="*") # verbosity 1 no board, 2 has board
-
-    red = PlayerWrapper('red player', player_loc, options, out)
-    green = PlayerWrapper('green player', player_loc, options, out)
-    blue = PlayerWrapper('blue player', player_loc, options, out)
+    # Create a star-log for controlling the format of output from within this
+    # program
+    out = StarLog(level=options.verbosity, star="*")
+    out.comment("all messages printed by the referee after this begin with a *")
+    out.comment("(any other lines of output must be from your Player classes).")
+    out.comment()
 
     try:
-        # We'll start measuring space usage from now, after all
-        # library imports should be finished:
-        set_space_line()
+        # Import player classes
+        p_R = PlayerWrapper('red player', options.playerR_loc, options, out)
+        p_G = PlayerWrapper('green player', options.playerG_loc, options, out)
+        p_B = PlayerWrapper('blue player', options.playerB_loc, options, out)
 
-        train([red, green, blue], options, out)
-    except ResourceLimitException as e:
+        # Play the game!
+        players = [p_R, p_G, p_B]
+        play(players, options, out, training=True)
+
+        # game finished, now we update weights
+        assert(len(players) > 0)
+        for wrapper in players:
+            features = wrapper.player.features
+            rewards = wrapper.player.rewards
+            print("# DEBUG", features, rewards)
+            weights = algorithm.weight_update(weights, features, rewards)
+
+        return weights
+
+    # In case the game ends in an abnormal way, print a clean error
+    # message for the user (rather than a trace).
+    except KeyboardInterrupt:
+        print()  # (end the line)
+        out.comment("bye!")
+    except IllegalActionException as e:
         out.section("game error")
-        out.print("error: resource limit exceeded!")
+        out.print("error: invalid action!")
         out.comment(e)
-    pass
 
-def train(players, options, out):
-    # Set up a new Chexers game and initialise a Red, Green and Blue player
-    # (constructing three Player classes including running their .__init__()
-    # methods).
-    game = Chexers(logfilename=options.logfile, debugboard=options.verbosity > 2)
-    out.section("initialising players")
-    for player, colour in zip(players, ['red', 'green', 'blue']):
-        # NOTE: `player` here is actually a player wrapper. Your program should
-        # still implement a method called `__init__()`, not one called `init()`.
-        player.init(colour)
-
-    # Display the initial state of the game.
-    out.section("game start")
-    out.comment("displaying game info:")
-    out.comments(game, pad=1)
-
-    # Repeat the following until the game ends
-    # (starting with Red as the current player, then alternating):
-    curr_player, next_player, prev_player = players
-    while not game.over():
-        time.sleep(options.delay)
-        out.section(f"{curr_player.name}'s turn")
-
-        # Ask the current player for their next action (calling their .action()
-        # method).
-        action = curr_player.train()
-
-        # Validate this action (or pass) and apply it to the game if it is
-        # allowed. Display the resulting game state.
-        game.update(curr_player.colour, action)
-        out.comment("displaying game info:")
-        out.comments(game, pad=1)
-
-        # Notify all three players (including the current player) of the action
-        # (or pass) (using their .update() methods).
-        for player in players:
-            player.update(curr_player.colour, action)
-
-        # Next player's turn!
-        curr_player, next_player, prev_player = next_player, prev_player, curr_player
-
-    # After that loop, the game has ended (one way or another!)
-    # Display the final result of the game to the user.
-    result = game.end()
-    out.section("game over!")
-    out.print(result)
-
-
-class Options:
-    def __init__(self):
-        self.logfile = None
-        self.verbosity = 2
-        self.delay = 0
-        self.train = 1
-        self.time = 60.0
-        self.space = 100.0
+#
+# class Options:
+#     def __init__(self):
+#         self.logfile = None
+#         self.verbosity = 2
+#         self.delay = 0
+#         self.train = 1
+#         self.time = 60.0
+#         self.space = 100.0
 
 
 if __name__ == "__main__":

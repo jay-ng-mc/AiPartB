@@ -52,6 +52,12 @@ class PlayerWrapper:
         # give back the result
         return action
 
+    def train_step(self):
+        self.out.comment(f"train_step for {self.name}")
+        train_step = self.player.train_step()
+        self.out.comment(f"{self.name} returned action: {train_step!r}", pad=1)
+        return train_step
+
     def update(self, colour, action):
         self.out.comment(f"updating {self.name} with {colour}'s action {action}"
             "...")
