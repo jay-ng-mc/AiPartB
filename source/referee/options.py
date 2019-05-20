@@ -40,6 +40,7 @@ optional arguments:
                         limit on memory space (float, MB) for each player
   -t [time_limit], --time [time_limit]
                         limit on CPU time (float, seconds) for each player
+  --train               go to training mode
   -D, --debug           switch to printing the debug board (with coordinates)
                         (overrides -v option; equivalent to -v or -v3)
   -v [{0,1,2,3}], --verbosity [{0,1,2,3}]
@@ -145,6 +146,11 @@ def get_options():
         type=float, nargs="?",
         default=TIME_LIMIT_DEFAULT, const=TIME_LIMIT_NOVALUE,
         help="limit on CPU time (float, seconds) for each player")
+
+    optionals.add_argument('--train',
+                           nargs='?',
+                           default=0, const=1,
+                           help="turn on weight update")
 
     optionals.add_argument('-D', '--debug',
         action="store_true",
