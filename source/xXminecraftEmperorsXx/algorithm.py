@@ -12,7 +12,7 @@ _FILE_PATH = ".\\xXminecraftEmperorsXx\\weights.txt"
 unit_moves = np.array([(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)])
 
 # TD Leaf
-LEARNING_RATE = 0.1
+LEARNING_RATE = 100
 LAMBDA = 1
 
 
@@ -20,10 +20,48 @@ class Algorithm:
 
     def __init__(self):
         file = open(_FILE_PATH, "r")
-        self.weights = Formatting.string_to_tuple(file.read())
+        weights = Formatting.string_to_tuple(file.read())
+        self.weights = np.array(weights)
         file.close()
 
-    def eval(self, board, player_color, my_pieces, goal):
+    def weight_update(self, weights, features, rewards):
+        N = len(features)
+        weight_updates = []
+        for i in range(0, N-1):
+            # i iterates over turns in the game
+            dr_dw = []      # a vector representing derivative of the feature vector over the weight vector
+            for feature in features[i]:
+                # this computes derivative over each element of feature vector of the step
+                cow = feature
+                # coefficient of weight, i.e. the 2 in 2x, is the feature,
+                # since they were multiplied together to get reward
+                derivative = 2*cow/np.cosh(2*cow)+1
+                dr_dw.append(derivative)
+                # derivative of tanh(a*x) = 2a/(cosh(2ax)+1) where a is constant and x is the variable
+
+            adjustments = []
+            for m in range(i, N-1):
+                diff = rewards[i+1] - rewards[i]        # difference between state m's utility and state m+1's utility
+                importance = LAMBDA**(m-i)              # LAMBDA scales the importance of this difference
+                adjustments.append(diff*importance)
+
+            weight_update = []
+            for element in dr_dw:
+                weight_update.append(element * sum(adjustments))
+                # weight_update is the due update incurred by a single state in the game,
+                # but is a vector (list) since weight is a vector
+
+            weight_updates.append(weight_update)
+            # weight_updates plural is the due updates incurred by all states of the game
+
+        np_updates = np.array(weight_updates)
+        compressed = np_updates.sum(0)              # element wise sum of all sublists
+        compressed *= LEARNING_RATE
+        new_weights = np.add(weights, compressed)
+
+        return new_weights
+
+    def eval(self, board, player_color, my_pieces, goal, training=False):
         # Returns a float value in range (0,1) to indicate the goodness of the current board state for the player
         # board : Dictionary
         # my_pieces : Tuple, e.g.(piece1, piece2, piece3)
@@ -40,7 +78,11 @@ class Algorithm:
         # print("DEBUG evals = ", evaluation)
         # print("DEBUG rewawrds = ", reward)
 
-        return reward
+        # unclean, refactor this later
+        if training:
+            return (reward, features)
+        else:
+            return reward
 
     def features(self, board, player_color, my_pieces, goal):
         # Returns a numpy vector that contains the features of the current board state

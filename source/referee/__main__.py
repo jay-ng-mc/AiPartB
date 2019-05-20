@@ -51,7 +51,7 @@ def main():
     # If it's another kind of error then it might be coming from the player
     # itself? Then, a traceback will be more helpful.
 
-def play(players, options, out):
+def play(players, options, out, training=False):
     # Set up a new Chexers game and initialise a Red, Green and Blue player
     # (constructing three Player classes including running their .__init__() 
     # methods).
@@ -76,7 +76,11 @@ def play(players, options, out):
 
         # Ask the current player for their next action (calling their .action() 
         # method).
-        action = curr_player.action()
+        # If training, call training step instead of action
+        if training:
+            action = curr_player.train_step()
+        else:
+            action = curr_player.action()
         
         # Validate this action (or pass) and apply it to the game if it is 
         # allowed. Display the resulting game state.
