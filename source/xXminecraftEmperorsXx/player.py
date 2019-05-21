@@ -92,6 +92,9 @@ class MinecraftPlayer:
         self.board.update(color, action)
 
     def train_step(self):
+        if self.board.num_pieces[self.color[0]] == 0:
+            return "PASS", None
+
         (next_move, util_feature) = self.max_n(training=True)
         utility, feature = util_feature
         self.rewards.append(utility)
@@ -114,14 +117,12 @@ class MinecraftPlayer:
             moves.append(move)
             utilities.append(utility)
 
-        max_utility = max(utilities, key=lambda util:utilities[0])
+        print(utilities)
+        max_utility = max(utilities, key=lambda x: x[0])
         # maximum, sorted by first element in utilities (which is the actual utility, not including the features
 
         index = utilities.index(max_utility)
         best_move = moves[index]
-
-        if len(max_utility) != 2:
-            print("DEBUG")
 
         return (best_move, max_utility)
 
@@ -130,20 +131,23 @@ class MinecraftPlayer:
 
     def back_utility(self, current):
         assert(current is not None)
-        if current.utility is not None:
-            return current.utility
         # assert(len(current.children) > 0)
         color = current.turn
         util_pos = _TURN_ID[color]
+
+        if current.utility is not None:
+            return current.utility[util_pos]
+
         children = current.children
         utilities = []
         for child in children:
             if child.utility is None:
-                utility = self.back_utility(child)
+                util_features = self.back_utility(child)
             else:
-                utility = child.utility[util_pos]
-            utilities.append(utility)
-        return max(utilities, key=lambda util:utilities[0])
+                util_features = child.utility[util_pos]
+            utilities.append(util_features)
+
+        return max(utilities, key=lambda x: x[0])
         # maximum, sorted by first element in utilities (which is the actual utility, not including the features
 
     def build_tree(self, root_board, training=False):
@@ -162,8 +166,6 @@ class MinecraftPlayer:
                     board = self.unsnap(node.snapshot)
                     node.utility = self.calculate_utilities(board, node.snapshot, training=training)
                     continue
-                if len(children) <= 0:
-                    print("DEBUG")
                 node.add_children(children)
                 for child in children:
                     fringe_nodes.put(child)
@@ -251,7 +253,6 @@ class MinecraftPlayer:
         next_board.update(board)
 
         if piece is None:
-            print("DEBUG")
             return next_board
         color = next_board[piece]
         next_board[piece] = ""
@@ -274,8 +275,8 @@ class MinecraftPlayer:
         util_green = algorithm.eval(board, "g", green_pieces, self.board.exits["g"], _GOALS["g"], training=training)
         util_blue = algorithm.eval(board, "b", blue_pieces, self.board.exits["b"], _GOALS["b"], training=training)
 
-        utilities = (util_red, util_green, util_blue)
-        return utilities
+        util_features = (util_red, util_green, util_blue)
+        return util_features
 
     def snapshot(self, board):
         red_pieces = tuple(piece for piece, color in board.items() if color == "r")

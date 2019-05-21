@@ -110,6 +110,10 @@ class Chexers:
 
         if random_board is not None:
             self.board.update(random_board)
+            self.score_limit = []
+            for color in "rgb":
+                color_pieces = [piece[0] for piece in self.board.items() if piece[1] == color]
+                self.score_limit.append(len(color_pieces))
         else:
             for colour in "rgb":
                 for qr in _STARTING_HEXES[colour]:
@@ -221,18 +225,27 @@ class Chexers:
 
     def over(self):
         """True iff the game over (draw or win detected)."""
-        items = self.board.items()
-        player_pieces = {
-            "r":0,
-            "g":0,
-            "b":0
-        }
-        for item in items:
-            if item[1] in "rgb":
-                player_pieces[item[1]] += 1
-        if player_pieces["r"]==0 or player_pieces["g"]==0 or player_pieces["b"]==0:
+        # items = self.board.items()
+        # player_pieces = {
+        #     "r":0,
+        #     "g":0,
+        #     "b":0
+        # }
+        # for item in items:
+        #     if item[1] in "rgb":
+        #         player_pieces[item[1]] += 1
+        # if player_pieces["r"]==0 or player_pieces["g"]==0 or player_pieces["b"]==0:
+        #     return True
+
+        r = self.score['r'] >= self.score_limit[0]
+        g = self.score['g'] >= self.score_limit[0]
+        b = self.score['b'] >= self.score_limit[0]
+
+        if r or g or b:
             return True
-        return (max(self.score.values()) >= 4) or (self.drawmsg != "")
+
+        # return (max(self.score.values()) >= 4) or (self.drawmsg != "")
+        return (self.drawmsg != "")
     def end(self):
         """
         Conclude the game, extracting a string describing result (win or draw)

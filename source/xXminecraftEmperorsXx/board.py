@@ -18,11 +18,18 @@ class Board:
     RADIUS = 3
 
     def __init__(self, random_board=None):
-        self.num_pieces = {
-            "r":4,
-            "g":4,
-            "b":4
-        }
+        if random_board is None:
+            self.num_pieces = {
+                "r":4,
+                "g":4,
+                "b":4
+            }
+        else:
+            self.num_pieces = {}
+            for color in "rgb":
+                color_pieces = [piece[0] for piece in random_board.items() if piece[1] == color]
+                self.num_pieces[color] = len(color_pieces)
+
         self.exits = {
             "r": 0,
             "g": 0,
