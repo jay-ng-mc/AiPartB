@@ -12,8 +12,8 @@ _FILE_PATH = ".\\xXminecraftEmperorsXx\\weights.txt"
 unit_moves = np.array([(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)])
 
 # TD Leaf
-LEARNING_RATE = 100
-LAMBDA = 1
+LEARNING_RATE = 0.03
+LAMBDA = 0
 
 
 class Algorithm:
@@ -24,7 +24,7 @@ class Algorithm:
         self.weights = np.array(weights)
         file.close()
 
-    def weight_update(self, weights, features, rewards):
+    def weight_update(self, weights, features, rewards, real_reward):
         N = len(features)
         weight_updates = []
         for i in range(0, N-1):
@@ -40,6 +40,7 @@ class Algorithm:
                 # derivative of tanh(a*x) = 2a/(cosh(2ax)+1) where a is constant and x is the variable
 
             adjustments = []
+            rewards[N-1] = real_reward                  # change last reward from predicted to actual game result
             for m in range(i, N-1):
                 diff = rewards[i+1] - rewards[i]        # difference between state m's utility and state m+1's utility
                 importance = LAMBDA**(m-i)              # LAMBDA scales the importance of this difference
@@ -61,13 +62,13 @@ class Algorithm:
 
         return new_weights
 
-    def eval(self, board, player_color, my_pieces, goal, training=False):
+    def eval(self, board, player_color, my_pieces, my_exits, goal, training=False):
         # Returns a float value in range (0,1) to indicate the goodness of the current board state for the player
         # board : Dictionary
         # my_pieces : Tuple, e.g.(piece1, piece2, piece3)
         #   piece in my_pieces : Tuple, e.g. (0,1), (1,2), (3,-1)
         # goal : Tuple, in format of (axis_number, axis_value), e.g. (0,3)
-        features = self.features(board, player_color[0], my_pieces, goal)
+        features = self.features(board, player_color[0], my_pieces, my_exits, goal)
         assert(features.size == len(self.weights))      # make sure same size so we can calculate dot product
         evaluation = features.dot(self.weights)
 
@@ -84,7 +85,7 @@ class Algorithm:
         else:
             return reward
 
-    def features(self, board, player_color, my_pieces, goal):
+    def features(self, board, player_color, my_pieces, my_exits, goal):
         # Returns a numpy vector that contains the features of the current board state
         # board : Dictionary
         # my_pieces : tuple
@@ -93,8 +94,8 @@ class Algorithm:
         pieces_3axis = Algorithm.piece_3axis(my_pieces)    # add third axis to piece
 
         f1 = len(my_pieces)
-        f2 = self.piece_separation(pieces_3axis)
-        # f3 = self.dist_intercept(pieces_3axis)
+        f2 = my_exits
+        f3 = self.piece_separation(pieces_3axis)
         f4 = self.dist_to_goal(pieces_3axis, goal)
         f5 = self.jumps(board, my_pieces, player_color, enemy_only=False)
         f6 = self.jumps(board, my_pieces, player_color, enemy_only=True)
@@ -104,7 +105,7 @@ class Algorithm:
         # f9 = self.dist_btw_enemy(board)
         # f10 = self.dist_btw_enemy(board)
 
-        features = [f1, f2, f4, f5, f6, f7, f8]
+        features = [f1, f2, f3, f4, f5, f6, f7, f8]
         features_vector = np.array(features)
 
         # print("DEBUG features = ", features_vector)

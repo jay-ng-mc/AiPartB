@@ -28,7 +28,7 @@ class MinecraftPlayer:
 
     # fringe_nodes = queue.PriorityQueue()
 
-    def __init__(self, color):
+    def __init__(self, color, random_board=False):
         """
         This method is called once at the beginning of the game to initialise
         your player. You should use this opportunity to set up your own internal
@@ -42,6 +42,8 @@ class MinecraftPlayer:
         # TODO: Set up state representation.
 
         self.board = Board()
+        if random_board:
+            self.board.replace_board(Board.get_random_board())
         self.color = color
         self.goal = _GOALS[color[0]]  # axis, value version of goal
         self.goal_hexes = self.board.get_goal(color)
@@ -251,9 +253,9 @@ class MinecraftPlayer:
         red_pieces = player_pieces["r"]
         green_pieces = player_pieces["g"]
         blue_pieces = player_pieces["b"]
-        util_red = algorithm.eval(board, "r", red_pieces, _GOALS["r"], training=training)
-        util_green = algorithm.eval(board, "g", green_pieces, _GOALS["g"], training=training)
-        util_blue = algorithm.eval(board, "b", blue_pieces, _GOALS["b"], training=training)
+        util_red = algorithm.eval(board, "r", red_pieces, self.board.exits["r"], _GOALS["r"], training=training)
+        util_green = algorithm.eval(board, "g", green_pieces, self.board.exits["g"], _GOALS["g"], training=training)
+        util_blue = algorithm.eval(board, "b", blue_pieces, self.board.exits["b"], _GOALS["b"], training=training)
 
         utilities = (util_red, util_green, util_blue)
         return utilities

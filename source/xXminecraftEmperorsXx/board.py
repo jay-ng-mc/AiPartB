@@ -23,6 +23,11 @@ class Board:
             "g":4,
             "b":4
         }
+        self.exits = {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        }
 
         # initialize blank board
         self.board_dict = {}
@@ -34,6 +39,10 @@ class Board:
         for color in "rgb":
             for coord in _STARTING_HEXES[color]:
                 self.board_dict[coord] = color
+
+    def replace_board(self, board):
+        self.board_dict = {}
+        self.board_dict.update(board)
 
     def update(self, color, action):
         aType, aArgs = action
@@ -55,6 +64,7 @@ class Board:
             qr1 = aArgs
             self.board_dict[qr1] = ""
             self.num_pieces[color[0]] -= 1
+            self.exits[color[0]] += 1
 
     def get(self):
         return self.board_dict
@@ -79,12 +89,9 @@ class Board:
         return player_pieces
     
     @staticmethod
-    def get_random_board():
+    def get_random_board(empty_char=""):
 
         num_pieces_on_board = {
-            """ the key is a character corresponding to each colour, the tuple is current 
-                number on board, and max number on board respectively
-            """
             "r":0,
             "g":0,
             "b":0
@@ -94,7 +101,7 @@ class Board:
         coord_range = range(-Board.RADIUS, Board.RADIUS+1)
         coord_list = [(q, r) for q in coord_range for r in coord_range if -q-r in coord_range]
         for coord in coord_list:
-            random_board[coord] = ""
+            random_board[coord] = empty_char
 
         # generate max number of pieces for each colour
         for key in num_pieces_on_board:
