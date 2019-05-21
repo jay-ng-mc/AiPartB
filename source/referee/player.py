@@ -31,13 +31,13 @@ class PlayerWrapper:
             f"from package '{player_pkg}'")
         self.Player = _load_player_class(player_pkg, player_cls)
 
-    def init(self, colour):
+    def init(self, colour, random_board=False):
         self.colour = colour
         player_cls = str(self.Player).strip('<class >')
         self.out.comment(f"initialising {self.colour} player as a {player_cls}")
         with self.space, self.timer:
             # construct/initialise the player class
-            self.player = self.Player(colour)
+            self.player = self.Player(colour, random_board=random_board)
         self.comment_if(self.timer.status(), pad=1)
         self.comment_if(self.space.status(), pad=1)
 

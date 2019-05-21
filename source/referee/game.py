@@ -15,6 +15,7 @@ structures for representing the state of a game.
 import sys
 import time
 from collections import defaultdict
+from xXminecraftEmperorsXx.board import Board
 
 # Game-specific constants:
 
@@ -101,14 +102,18 @@ class Chexers:
     Represent the evolving state of a game of Chexers. Main useful methods
     are __init__, update, over, end, and __str__.
     """
-    def __init__(self, logfilename=None, debugboard=False):
+    def __init__(self, logfilename=None, debugboard=False, random_board=False):
         # initialise game board state:
         ran = range(-3, +3+1)
         self.hexes = {(q,r) for q in ran for r in ran if -q-r in ran}
         self.board = {qr: ' ' for qr in self.hexes}
-        for colour in "rgb":
-            for qr in _STARTING_HEXES[colour]:
-                self.board[qr] = colour
+
+        if random_board:
+            self.board.update(Board.get_random_board(empty_char=' '))
+        else:
+            for colour in "rgb":
+                for qr in _STARTING_HEXES[colour]:
+                    self.board[qr] = colour
         
         # also keep track of some other state variables for win/draw
         # detection (score, number of turns, state history)

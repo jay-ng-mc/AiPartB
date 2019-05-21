@@ -51,16 +51,17 @@ def main():
     # If it's another kind of error then it might be coming from the player
     # itself? Then, a traceback will be more helpful.
 
-def play(players, options, out, training=False):
+
+def play(players, options, out, training=False, random_board=False):
     # Set up a new Chexers game and initialise a Red, Green and Blue player
     # (constructing three Player classes including running their .__init__() 
     # methods).
-    game = Chexers(logfilename=options.logfile, debugboard=options.verbosity>2)
+    game = Chexers(logfilename=options.logfile, debugboard=options.verbosity>2, random_board=random_board)
     out.section("initialising players")
     for player, colour in zip(players, ['red', 'green', 'blue']):
         # NOTE: `player` here is actually a player wrapper. Your program should 
         # still implement a method called `__init__()`, not one called `init()`.
-        player.init(colour)
+        player.init(colour, random_board=random_board)
 
     # Display the initial state of the game.
     out.section("game start")
@@ -101,6 +102,7 @@ def play(players, options, out, training=False):
     result = game.end()
     out.section("game over!")
     out.print(result)
+
 
 if __name__ == '__main__':
     main()
