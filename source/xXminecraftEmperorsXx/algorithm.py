@@ -12,8 +12,9 @@ _FILE_PATH = ".\\xXminecraftEmperorsXx\\weights.txt"
 unit_moves = np.array([(1,-1), (1,0), (0,1), (-1,1), (-1,0), (0,-1)])
 
 # TD Leaf
-LEARNING_RATE = 0.03
-LAMBDA = 0
+LEARNING_RATE = 0.2
+FEATURE_MULTIPLIER = 0.02
+LAMBDA = 1
 
 
 class Algorithm:
@@ -41,6 +42,7 @@ class Algorithm:
 
             adjustments = []
             rewards[N-1] = real_reward                  # change last reward from predicted to actual game result
+            # print("# DEBUG", rewards)
             for m in range(i, N-1):
                 diff = rewards[i+1] - rewards[i]        # difference between state m's utility and state m+1's utility
                 importance = LAMBDA**(m-i)              # LAMBDA scales the importance of this difference
@@ -77,7 +79,7 @@ class Algorithm:
         reward = math.tanh(evaluation)                  # normalize evaluation
 
         # print("DEBUG evals = ", evaluation)
-        # print("DEBUG rewawrds = ", reward)
+        # print("DEBUG rewards = ", reward)
 
         # unclean, refactor this later
         if training:
@@ -106,7 +108,7 @@ class Algorithm:
         # f10 = self.dist_btw_enemy(board)
 
         features = [f1, f2, f3, f4, f5, f6, f7, f8]
-        features_vector = np.array(features)
+        features_vector = np.array(features)*FEATURE_MULTIPLIER
 
         # print("DEBUG features = ", features_vector)
 

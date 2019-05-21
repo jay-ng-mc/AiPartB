@@ -6,6 +6,7 @@ from referee.game import Chexers, IllegalActionException
 from referee.player import PlayerWrapper
 from referee.options import PackageSpecAction, get_options
 from xXminecraftEmperorsXx.algorithm import Algorithm
+from xXminecraftEmperorsXx.board import Board
 from xXminecraftEmperorsXx.player import MinecraftPlayer as Player
 from xXminecraftEmperorsXx.Formatting import string_to_tuple
 import numpy as np
@@ -13,7 +14,7 @@ import numpy as np
 _FILE_PATH = ".\\xXminecraftEmperorsXx\\weights.txt"
 
 def main():
-    GAME_LIMIT = 10
+    GAME_LIMIT = 100
     game_num = 0
 
     while game_num < GAME_LIMIT:
@@ -23,10 +24,10 @@ def main():
         file.close()
 
         print("# New Game")
-        weights = run_game(weights, False)   # True for random board or False for default starting board
+        weights = run_game(weights, True)   # True for random board or False for default starting board
         file = open(_FILE_PATH, "w")
         new_weight = np.array2string(weights, separator=',', formatter={'float_kind':lambda x: "%.10f" % x})
-        print('# DEBUG weights=', weights, new_weight)
+        print('# DEBUG n_weights=', new_weight)
         file.write(new_weight)
         file.close()
         game_num += 1
@@ -58,7 +59,11 @@ def run_game(weights, random_board=False):
 
         # Play the game!
         players = [p_R, p_G, p_B]
-        play(players, options, out, training=True, random_board=random_board)
+
+        board = None
+        if random_board:
+            board = Board.get_random_board()
+        play(players, options, out, training=True, random_board=board)
 
         exits = p_R.player.board.exits
         draw = all(exits.values()) < 4
@@ -79,7 +84,6 @@ def run_game(weights, random_board=False):
         for wrapper in players:
             features = wrapper.player.features
             rewards = wrapper.player.rewards
-            print("# DEBUG", features, rewards)
             weights = algorithm.weight_update(weights, features, rewards, real_reward[wrapper.player.color[0]])
 
         return weights

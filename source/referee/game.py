@@ -102,14 +102,14 @@ class Chexers:
     Represent the evolving state of a game of Chexers. Main useful methods
     are __init__, update, over, end, and __str__.
     """
-    def __init__(self, logfilename=None, debugboard=False, random_board=False):
+    def __init__(self, logfilename=None, debugboard=False, random_board=None):
         # initialise game board state:
         ran = range(-3, +3+1)
         self.hexes = {(q,r) for q in ran for r in ran if -q-r in ran}
         self.board = {qr: ' ' for qr in self.hexes}
 
-        if random_board:
-            self.board.update(Board.get_random_board(empty_char=' '))
+        if random_board is not None:
+            self.board.update(random_board)
         else:
             for colour in "rgb":
                 for qr in _STARTING_HEXES[colour]:
@@ -221,6 +221,17 @@ class Chexers:
 
     def over(self):
         """True iff the game over (draw or win detected)."""
+        items = self.board.items()
+        player_pieces = {
+            "r":0,
+            "g":0,
+            "b":0
+        }
+        for item in items:
+            if item[1] in "rgb":
+                player_pieces[item[1]] += 1
+        if player_pieces["r"]==0 or player_pieces["g"]==0 or player_pieces["b"]==0:
+            return True
         return (max(self.score.values()) >= 4) or (self.drawmsg != "")
     def end(self):
         """
