@@ -52,7 +52,7 @@ def main():
     # itself? Then, a traceback will be more helpful.
 
 
-def play(players, options, out, training=False, random_board=False):
+def play(players, options, out, training=False, random_board=None):
     # Set up a new Chexers game and initialise a Red, Green and Blue player
     # (constructing three Player classes including running their .__init__() 
     # methods).

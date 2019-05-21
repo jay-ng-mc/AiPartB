@@ -28,7 +28,7 @@ class MinecraftPlayer:
 
     # fringe_nodes = queue.PriorityQueue()
 
-    def __init__(self, color, random_board=False):
+    def __init__(self, color, random_board=None):
         """
         This method is called once at the beginning of the game to initialise
         your player. You should use this opportunity to set up your own internal
@@ -41,12 +41,10 @@ class MinecraftPlayer:
         """
         # TODO: Set up state representation.
 
-        self.board = Board()
-        if random_board:
-            self.board.replace_board(Board.get_random_board())
+        self.board = Board(random_board)
         self.color = color
         self.goal = _GOALS[color[0]]  # axis, value version of goal
-        self.goal_hexes = self.board.get_goal(color)
+        self.goal_hexes = self.board.get_goals()
 
         # used for training only
         self.rewards = []
@@ -122,6 +120,9 @@ class MinecraftPlayer:
         index = utilities.index(max_utility)
         best_move = moves[index]
 
+        if len(max_utility) != 2:
+            print("DEBUG")
+
         return (best_move, max_utility)
 
     def weight_train(self):
@@ -129,7 +130,9 @@ class MinecraftPlayer:
 
     def back_utility(self, current):
         assert(current is not None)
-        assert(len(current.children) > 0)
+        if current.utility is not None:
+            return current.utility
+        # assert(len(current.children) > 0)
         color = current.turn
         util_pos = _TURN_ID[color]
         children = current.children
@@ -155,6 +158,12 @@ class MinecraftPlayer:
             level = node.level
             if level < DEPTH_LIMIT:
                 children = self.node_expander(node)
+                if children == "piece_deleted":
+                    board = self.unsnap(node.snapshot)
+                    node.utility = self.calculate_utilities(board, node.snapshot, training=training)
+                    continue
+                if len(children) <= 0:
+                    print("DEBUG")
                 node.add_children(children)
                 for child in children:
                     fringe_nodes.put(child)
@@ -174,11 +183,15 @@ class MinecraftPlayer:
         board = self.unsnap(node.snapshot)
         my_pieces = tuple(piece for (piece, color) in board.items() if color == node.turn)
 
+        if node.snapshot[node.turn] == ():
+            return "piece_deleted"
+        # called node expander on a player with no pieces (because last piece conquered in previous step)
+
         for piece in my_pieces:
             possible_moves.clear()
 
             # add option to leave board
-            if piece in self.goal_hexes:
+            if piece in self.goal_hexes[node.turn]:
                 valid_moves.append(("EXIT", piece, None, None))
                 continue
 
@@ -218,6 +231,7 @@ class MinecraftPlayer:
                          parent_move=output_move,
                          turn=_NEXT_TURN[node.turn])
             children.append(child)
+
         return children
 
     def convert_output(self, move):
@@ -236,6 +250,9 @@ class MinecraftPlayer:
         next_board = {}
         next_board.update(board)
 
+        if piece is None:
+            print("DEBUG")
+            return next_board
         color = next_board[piece]
         next_board[piece] = ""
         if action_type in ["MOVE", "JUMP"]:
